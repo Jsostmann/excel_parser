@@ -1,0 +1,10 @@
+# Ignore Excel files
+*.xls
+*.xlsx
+*.xlsm
+
+# Ignore the styles directory
+styles/
+
+# Ignore the images directory
+images/
