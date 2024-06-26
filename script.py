@@ -110,6 +110,10 @@ def get_excel_rows(excel_file, sheet=None):
         sheet = workbook[sheet]
 
     for row in sheet.iter_rows(min_row=2, values_only=True):
+        if row[0] is None:
+            print(f"Warning: Skipping row with None value in school column: {row}")
+            continue
+
         row_list = [row[0], row[1], str(row[2])]
         rows.append(row_list)
         unique_schools.add(row[0])
@@ -159,11 +163,20 @@ def copy_images(images_dir, styles_dir, style_map, unique_schools):
                 #shutil.copy(source_image_path, destination_image_path)
                 print(f"Copied {source_image_path} to {destination_image_path}")
 
-
+def test_fuzzy(string_one, string_two):
+    pass
 
 if __name__ == "__main__":
     rows, unique_schools = get_excel_rows("hanes_data.xlsx")
     style_map = create_syle_map(rows)
-    image_files = os.listdir("images")
     
-    copy_images("images", "styles", style_map, unique_schools)
+    #copy_images("images", "styles", style_map, unique_schools)
+
+    shirt_one = "LCI25_P015522_P015523_North Carolina A&T StateSPN"
+    shirt_two = "LCI25_P015522_P015523_North CarolinaSPN"
+
+    school_one = "NORTH CAROLINA A&T STATE"
+    school_two = "NORTH CAROLINA UNIVERSITY OF (UNC)"
+    unique_schools = {school_one, school_two}
+
+    print(get_school_key_from_file(unique_schools, shirt_two))
