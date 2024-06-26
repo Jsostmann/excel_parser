@@ -156,7 +156,7 @@ def copy_images(images_dir, styles_dir, style_map, unique_schools):
             
             for size_dir in style_map[style][file_school_name]:
                 destination_image_path = os.path.join(current_style_dir, size_dir, image_file)
-                #shutil.copy(source_image_path, destination_image_path)
+                shutil.copy(source_image_path, destination_image_path)
                 print(f"Copied {source_image_path} to {destination_image_path}")
 
 
