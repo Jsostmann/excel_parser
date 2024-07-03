@@ -172,3 +172,12 @@ if __name__ == "__main__":
     style_map = create_syle_map(rows)
     copy_images("images", "styles", style_map)
 
+
+    shirt_one = "LCI25_P015522_P015523_North Carolina A&T StateSPN"
+    shirt_two = "LCI25_P015522_P015523_North CarolinaSPN"
+
+    school_one = "NORTH CAROLINA A&T STATE"
+    school_two = "NORTH CAROLINA UNIVERSITY OF (UNC)"
+    unique_schools = {school_one, school_two}
+
+    print(get_school_key_from_file(unique_schools, shirt_two))
