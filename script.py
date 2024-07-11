@@ -3,6 +3,7 @@ import os
 import shutil
 import re
 from fuzzywuzzy import fuzz
+from PIL import Image
 
 file_to_hanes_mapping = {
     "style_1": {
@@ -123,26 +124,25 @@ def create_syle_map(excel_rows):
 
     for row in excel_rows:
         if row[1] not in style_map:
-            style_map[row[1]] = {}
+            style_map[row[1]] = {"schools": set()}
 
         if row[0] not in style_map[row[1]]:
             style_map[row[1]][row[0]] = []
         
+        style_map[row[1]]["schools"].add(row[0])
         style_map[row[1]][row[0]].append(row[2])
     
-    for style in style_map:
-        schools = style_map[style].keys()
-        style_map[style]["schools"] = set(schools)
-
     return style_map
 
 def get_school_key_from_file(unique_schools, file_name):
     max_simliarity = -1
     answer = None
+
     for school in unique_schools:
 
         normalized_school = re.sub(r'[^a-z0-9]', ' ', school.lower()).strip()
         normalized_file_name = re.sub(r'[^a-z0-9]', ' ', file_name.lower()).strip()
+
         ratio = fuzz.ratio(normalized_school, normalized_file_name)
 
         if ratio > max_simliarity:
@@ -151,33 +151,37 @@ def get_school_key_from_file(unique_schools, file_name):
 
     return answer
 
+
+
+def compress_image(image_path, compression_factor=75):
+    picture = Image.open(image_path)
+    picture.save(image_path, optimize=True, quality=compression_factor)
+
+
 def copy_images(images_dir, styles_dir, style_map):
     
     for style in style_map:
         current_style_dir = os.path.join(styles_dir, style)
         current_image_dir = os.path.join(images_dir, style)
         image_files = os.listdir(current_image_dir)
+        
         for image_file in image_files:
             file_school_name = get_school_key_from_file(style_map[style]["schools"], image_file)
             source_image_path = os.path.join(current_image_dir, image_file)
             
             for size_dir in style_map[style][file_school_name]:
+
                 destination_image_path = os.path.join(current_style_dir, size_dir, image_file)
-                #shutil.copy(source_image_path, destination_image_path)
+                os.makedirs(os.path.dirname(destination_image_path), exist_ok=True)
+                shutil.copy(source_image_path, destination_image_path)
+
                 print(f"Copied {source_image_path} to {destination_image_path}")
+                
+                compress_image(destination_image_path)
 
 
 if __name__ == "__main__":
     rows = get_excel_rows("hanes_data.xlsx")
     style_map = create_syle_map(rows)
+
     copy_images("images", "styles", style_map)
-
-
-    shirt_one = "LCI25_P015522_P015523_North Carolina A&T StateSPN"
-    shirt_two = "LCI25_P015522_P015523_North CarolinaSPN"
-
-    school_one = "NORTH CAROLINA A&T STATE"
-    school_two = "NORTH CAROLINA UNIVERSITY OF (UNC)"
-    unique_schools = {school_one, school_two}
-
-    print(get_school_key_from_file(unique_schools, shirt_two))
