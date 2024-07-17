@@ -161,7 +161,7 @@ def compress_image(input_path, overwrite=True, quality=70):
         else:
             input_file_name, input_ext = os.path.splitext(input_path)
             output_path = f"{input_file_name}_compressed{input_ext}"
-            
+
         img.save(output_path, optimize=True, quality=quality)
         print(f"Compressed {output_path}")
 
@@ -170,7 +170,14 @@ def compress_images(directory=os.getcwd(), quality=70):
     for root, _, files in os.walk(directory):
         for filename in files:
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                
                 file_path = os.path.join(root, filename)
+                file_size = os.path.getsize(file_path)
+                file_size_in_mb = file_size / (1024 * 1024)
+
+                if file_size_in_mb < 5:
+                    continue
+
                 compress_image(file_path, quality=quality)
 
 
