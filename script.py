@@ -2,6 +2,7 @@ import openpyxl
 import os
 import shutil
 import re
+import argparse
 from fuzzywuzzy import fuzz
 from PIL import Image
 
@@ -151,11 +152,26 @@ def get_school_key_from_file(unique_schools, file_name):
 
     return answer
 
+    
+def compress_image(input_path, overwrite=True, quality=70):
+    with Image.open(input_path) as img:
+        
+        if overwrite:
+            output_path = input_path
+        else:
+            input_file_name, input_ext = os.path.splitext(input_path)
+            output_path = f"{input_file_name}_compressed{input_ext}"
+            
+        img.save(output_path, optimize=True, quality=quality)
+        print(f"Compressed {output_path}")
 
 
-def compress_image(image_path, compression_factor=75):
-    picture = Image.open(image_path)
-    picture.save(image_path, optimize=True, quality=compression_factor)
+def compress_images(directory=os.getcwd(), quality=70):
+    for root, _, files in os.walk(directory):
+        for filename in files:
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                file_path = os.path.join(root, filename)
+                compress_image(file_path, quality=quality)
 
 
 def copy_images(images_dir, styles_dir, style_map):
@@ -176,12 +192,20 @@ def copy_images(images_dir, styles_dir, style_map):
                 shutil.copy(source_image_path, destination_image_path)
 
                 print(f"Copied {source_image_path} to {destination_image_path}")
-                
-                compress_image(destination_image_path)
 
 
 if __name__ == "__main__":
-    rows = get_excel_rows("hanes_data.xlsx")
-    style_map = create_syle_map(rows)
+    parser = argparse.ArgumentParser(description="Process images with either compression or copy")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--compress", action="store_true", help="Compress images")
+    group.add_argument("--copy", action="store_true", help="Copy images")
 
-    copy_images("images", "styles", style_map)
+    args = parser.parse_args()
+
+    if args.compress:
+        compress_images()
+
+    elif args.copy:
+        rows = get_excel_rows("hanes_data.xlsx")
+        style_map = create_syle_map(rows)
+        copy_images("images", "styles", style_map)
