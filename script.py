@@ -165,20 +165,34 @@ def compress_image(input_path, overwrite=True, quality=70):
         img.save(output_path, optimize=True, quality=quality)
         print(f"Compressed {output_path}")
 
+def compress_image_with_dimentions(input_path, overwrite=True, quality=85, max_size_mb=5, max_dimensions=(1800, 1800)):
+    if overwrite:
+        output_path = input_path
+    else:
+        input_file_name, input_ext = os.path.splitext(input_path)
+        output_path = f"{input_file_name}_compressed{input_ext}"
 
-def compress_images(directory=os.getcwd(), quality=70):
+    with Image.open(input_path) as img:
+        width, height = img.size
+
+        if width > max_dimensions[0] or height > max_dimensions[1]:
+            img.thumbnail(max_dimensions)
+        
+        img.save(output_path, quality=quality)
+        
+        while os.path.getsize(output_path) > max_size_mb * 1024 * 1024 and quality > 10:
+            quality -= 5
+            img.save(output_path, quality=quality)
+
+
+def compress_images(directory=os.getcwd(), quality=85):
     for root, _, files in os.walk(directory):
         for filename in files:
             if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                 
                 file_path = os.path.join(root, filename)
-                file_size = os.path.getsize(file_path)
-                file_size_in_mb = file_size / (1024 * 1024)
 
-                if file_size_in_mb < 5:
-                    continue
-
-                compress_image(file_path, quality=quality)
+                compress_image_with_dimentions(file_path, quality=quality)
 
 
 def copy_images(images_dir, styles_dir, style_map):
